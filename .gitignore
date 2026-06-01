@@ -1,0 +1,14 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Generated demo runtime data
+backend/data/*.sqlite3
+backend/data/*.db
+
+# Local/client source materials kept out of the code repo by default
+*.pdf
+*.xlsx
+*.zip
