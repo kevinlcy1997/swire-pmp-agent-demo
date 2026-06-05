@@ -88,7 +88,7 @@ async def call_pmp_tools(state: AgentState) -> AgentState:
 
 
 async def compose_answer_node(state: AgentState) -> AgentState:
-    state["answer"] = compose_answer(state["user"], state["intent"], state["tool_results"])
+    state["answer"] = compose_answer(state["user"], state["intent"], state["tool_results"], state["message"])
     return state
 
 

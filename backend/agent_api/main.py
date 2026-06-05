@@ -8,8 +8,9 @@ from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
-from backend.agent_api.graph import run_agent_graph
+from backend.agent_api.graph import run_agent_graph, load_user_context, classify_intent_node, select_tools, call_pmp_tools, write_audit_log, AgentState
 from backend.agent_api.intent import classify_intent
+import backend.shared.config as _config
 from backend.shared.demo_users import DEMO_USERS, DemoUser, get_demo_user
 from backend.shared.models import ChatRequest, ChatResponse, DemoUserResponse, StreamEvent
 
@@ -68,13 +69,45 @@ async def chat_stream(
 
     async def events():
         yield _sse("thinking", {"message": "Reading your user context and checking PMP permissions.", "user": user.user_key})
-        intent = classify_intent(request.message)
-        yield _sse("thinking", {"message": f"Detected intent: {intent}."})
-        state = await run_agent_graph(user, request.message, conversation_id)
+
+        # Run pipeline up to tool calls
+        initial: AgentState = {"user": user, "message": request.message, "conversation_id": conversation_id}
+        state = await load_user_context(initial)
+        state = await classify_intent_node(state)
+        yield _sse("thinking", {"message": f"Detected intent: {state['intent']}."})
+        state = await select_tools(state)
+        state = await call_pmp_tools(state)
+
         for call in state.get("tool_calls", []):
             yield _sse("tool_call", call)
             yield _sse("tool_result", {"tool": call["tool"], "result_count": call["result_count"], "source": "PMP API"})
-        yield _sse("answer", {"content": state["answer"], "conversation_id": conversation_id})
+
+        # Compose answer — stream if LLM is enabled
+        if _config.USE_REAL_LLM:
+            try:
+                from backend.agent_api.llm import llm_compose_answer_stream
+                full_answer = ""
+                async for chunk in llm_compose_answer_stream(
+                    user.name, user.role, request.message,
+                    state["intent"], state["tool_results"],
+                ):
+                    full_answer += chunk
+                    yield _sse("delta", {"content": chunk})
+                state["answer"] = full_answer
+                yield _sse("answer", {"content": full_answer, "conversation_id": conversation_id})
+            except Exception as exc:
+                import logging
+                logging.getLogger(__name__).exception("LLM streaming failed: %s", exc)
+                from backend.agent_api.composer import compose_answer
+                state["answer"] = compose_answer(user, state["intent"], state["tool_results"], request.message)
+                yield _sse("answer", {"content": state["answer"], "conversation_id": conversation_id})
+        else:
+            from backend.agent_api.composer import compose_answer
+            state["answer"] = compose_answer(user, state["intent"], state["tool_results"], request.message)
+            yield _sse("answer", {"content": state["answer"], "conversation_id": conversation_id})
+
+        # Audit log
+        state = await write_audit_log(state)
         yield _sse("done", {"conversation_id": conversation_id})
 
     return StreamingResponse(events(), media_type="text/event-stream")

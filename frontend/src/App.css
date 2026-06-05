@@ -550,3 +550,18 @@ input {
 .received-bubble:has(.md-table) {
   max-width: min(700px, 90vw);
 }
+
+/* Thinking / streaming indicator */
+.thinking-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4a6280;
+  font-style: italic;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

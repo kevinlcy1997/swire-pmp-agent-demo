@@ -203,6 +203,100 @@ app.get('/api/chat/history', authenticate, (req, res) => {
   res.json({ messages })
 })
 
+// SSE streaming endpoint — proxies Agent API streaming response to browser
+app.post('/api/chat/stream', authenticate, async (req, res) => {
+  const text = String(req.body?.message || '').trim()
+  if (!text) {
+    res.status(400).json({ error: 'Message is required' })
+    return
+  }
+
+  const now = new Date().toISOString()
+  const userInsert = database
+    .prepare(
+      `
+        INSERT INTO messages (user_id, role, text, created_at)
+        VALUES (?, 'user', ?, ?)
+      `,
+    )
+    .run(req.user.userId, text, now)
+
+  // Set SSE headers
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.setHeader('X-User-Message-Id', String(userInsert.lastInsertRowid))
+  res.flushHeaders()
+
+  let fullAnswer = ''
+
+  try {
+    const demoUserKey = req.user.demoUserKey || req.user.username
+    const agentResponse = await fetch(`${AGENT_API_URL}/api/chat/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Demo-User': demoUserKey,
+      },
+      body: JSON.stringify({ message: text }),
+    })
+
+    if (!agentResponse.ok) {
+      throw new Error(`Agent API returned ${agentResponse.status}`)
+    }
+
+    const reader = agentResponse.body.getReader()
+    const decoder = new TextDecoder()
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      const chunk = decoder.decode(value, { stream: true })
+      res.write(chunk)
+
+      // Extract answer content from SSE events
+      const lines = chunk.split('\n')
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('event: answer')) {
+          const dataLine = lines[i + 1]
+          if (dataLine && dataLine.startsWith('data: ')) {
+            try {
+              const parsed = JSON.parse(dataLine.slice(6))
+              fullAnswer = parsed.content || fullAnswer
+            } catch {}
+          }
+        }
+      }
+    }
+  } catch (err) {
+    fullAnswer = 'Sorry, the AI agent is unavailable right now.'
+    res.write(`event: answer\ndata: ${JSON.stringify({ content: fullAnswer })}\n\n`)
+    res.write(`event: done\ndata: ${JSON.stringify({ conversation_id: null })}\n\n`)
+  }
+
+  // Save final assistant message to DB
+  const replyTime = new Date().toISOString()
+  const assistantInsert = database
+    .prepare(
+      `
+        INSERT INTO messages (user_id, role, text, created_at)
+        VALUES (?, 'assistant', ?, ?)
+      `,
+    )
+    .run(req.user.userId, fullAnswer, replyTime)
+
+  // Send metadata event so frontend knows the DB IDs
+  res.write(
+    `event: meta\ndata: ${JSON.stringify({
+      userMessage: { id: userInsert.lastInsertRowid, role: 'user', text, createdAt: now },
+      assistantMessage: { id: assistantInsert.lastInsertRowid, role: 'assistant', text: fullAnswer, createdAt: replyTime },
+    })}\n\n`,
+  )
+
+  res.end()
+})
+
 app.post('/api/chat', authenticate, async (req, res) => {
   const text = String(req.body?.message || '').trim()
   if (!text) {

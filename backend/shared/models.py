@@ -28,7 +28,7 @@ class DemoUserResponse(BaseModel):
     description: str
 
 
-StreamEventType = Literal["thinking", "tool_call", "tool_result", "answer", "error", "done"]
+StreamEventType = Literal["thinking", "tool_call", "tool_result", "answer", "delta", "error", "done"]
 
 
 class StreamEvent(BaseModel):

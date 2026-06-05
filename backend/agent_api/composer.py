@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
+import backend.shared.config as _config
 from backend.shared.demo_users import DemoUser
+
+logger = logging.getLogger(__name__)
 
 
 def money(currency: str, amount: float | int) -> str:
@@ -16,7 +20,19 @@ def _md_table(headers: list[str], rows: list[list[str]]) -> str:
     return "\n".join([header_line, separator, *data_lines])
 
 
-def compose_answer(user: DemoUser, intent: str, tool_results: dict[str, Any]) -> str:
+def compose_answer(user: DemoUser, intent: str, tool_results: dict[str, Any], message: str = "") -> str:
+    if _config.USE_REAL_LLM:
+        try:
+            from backend.agent_api.llm import llm_compose_answer
+            answer = llm_compose_answer(user.name, user.role, message, intent, tool_results)
+            logger.info("LLM composed answer (%d chars)", len(answer))
+            return answer
+        except Exception:
+            logger.exception("LLM answer composition failed, falling back to template")
+    return _template_answer(user, intent, tool_results)
+
+
+def _template_answer(user: DemoUser, intent: str, tool_results: dict[str, Any]) -> str:
     if intent in {"payment_status", "vendor_payment_status"}:
         pa_records = tool_results.get("pa_status", {}).get("records", [])
         po_record = tool_results.get("po_detail", {}).get("record")

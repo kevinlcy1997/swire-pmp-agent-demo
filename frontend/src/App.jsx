@@ -412,25 +412,126 @@ function App() {
       createdAt: new Date().toISOString(),
     }
 
-    updateActiveConversationMessages((previousMessages) => [...previousMessages, tempUserMessage])
+    const streamingId = `stream-${Date.now()}`
+    const thinkingId = `thinking-${Date.now()}`
+
+    updateActiveConversationMessages((previousMessages) => [
+      ...previousMessages,
+      tempUserMessage,
+      { id: thinkingId, role: 'assistant', text: '🔍 Thinking...', createdAt: new Date().toISOString(), isThinking: true },
+    ])
     setInputValue('')
     setIsSending(true)
 
     try {
-      const result = await apiRequest('/api/chat', {
+      const response = await fetch('/api/chat/stream', {
         method: 'POST',
-        token: authToken,
-        body: { message: trimmedMessage },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ message: trimmedMessage }),
       })
 
-      updateActiveConversationMessages((previousMessages) => [
-        ...previousMessages.filter((message) => message.id !== tempUserMessage.id),
-        result.userMessage,
-        result.assistantMessage,
-      ])
+      if (!response.ok) {
+        throw new Error('Request failed')
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let streamedText = ''
+      let streamingStarted = false
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const events = buffer.split('\n\n')
+        buffer = events.pop() || ''
+
+        for (const eventBlock of events) {
+          const lines = eventBlock.split('\n')
+          let eventType = ''
+          let eventData = ''
+
+          for (const line of lines) {
+            if (line.startsWith('event: ')) eventType = line.slice(7)
+            else if (line.startsWith('data: ')) eventData = line.slice(6)
+          }
+
+          if (!eventType || !eventData) continue
+
+          try {
+            const parsed = JSON.parse(eventData)
+
+            if (eventType === 'thinking') {
+              updateActiveConversationMessages((prev) =>
+                prev.map((m) => (m.id === thinkingId ? { ...m, text: `🔍 ${parsed.message}` } : m)),
+              )
+            } else if (eventType === 'tool_call') {
+              updateActiveConversationMessages((prev) =>
+                prev.map((m) =>
+                  m.id === thinkingId
+                    ? { ...m, text: `🔧 Calling ${parsed.tool}...` }
+                    : m,
+                ),
+              )
+            } else if (eventType === 'delta') {
+              streamedText += parsed.content
+              if (!streamingStarted) {
+                streamingStarted = true
+                updateActiveConversationMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === thinkingId
+                      ? { ...m, id: streamingId, text: streamedText, isThinking: false }
+                      : m,
+                  ),
+                )
+              } else {
+                updateActiveConversationMessages((prev) =>
+                  prev.map((m) => (m.id === streamingId ? { ...m, text: streamedText } : m)),
+                )
+              }
+            } else if (eventType === 'answer' && !streamingStarted) {
+              // Non-streaming fallback — full answer in one go
+              updateActiveConversationMessages((prev) =>
+                prev.map((m) =>
+                  m.id === thinkingId
+                    ? { ...m, id: streamingId, text: parsed.content, isThinking: false }
+                    : m,
+                ),
+              )
+              streamingStarted = true
+              streamedText = parsed.content
+            } else if (eventType === 'meta') {
+              // Replace temp messages with persisted DB versions
+              updateActiveConversationMessages((prev) =>
+                prev.map((m) => {
+                  if (m.id === tempUserMessage.id) return parsed.userMessage
+                  if (m.id === streamingId) return { ...parsed.assistantMessage, text: streamedText || parsed.assistantMessage.text }
+                  return m
+                }),
+              )
+            }
+          } catch {}
+        }
+      }
+
+      // If we never got a streaming response, clean up thinking bubble
+      if (!streamingStarted) {
+        updateActiveConversationMessages((prev) =>
+          prev.map((m) =>
+            m.id === thinkingId
+              ? { ...m, id: streamingId, text: 'Sorry, no response received.', isThinking: false }
+              : m,
+          ),
+        )
+      }
     } catch (error) {
       updateActiveConversationMessages((previousMessages) => [
-        ...previousMessages,
+        ...previousMessages.filter((m) => m.id !== thinkingId),
         {
           id: `error-${Date.now()}`,
           role: 'assistant',
@@ -545,7 +646,13 @@ function App() {
                 <div className={`message-row ${message.role === 'user' ? 'sent' : 'received'}`}>
                   {message.role === 'assistant' && <div className="bot-icon">🤖</div>}
                   <div className={`message bubble ${message.role === 'user' ? 'sent-bubble' : 'received-bubble'}`}>
-                    {message.role === 'assistant' ? <MarkdownContent text={message.text} /> : message.text}
+                    {message.role === 'assistant' ? (
+                      message.isThinking ? (
+                        <div className="thinking-indicator">{message.text}</div>
+                      ) : (
+                        <MarkdownContent text={message.text} />
+                      )
+                    ) : message.text}
                   </div>
                 </div>
                 <div className={`timestamp ${message.role === 'user' ? 'sent-time' : ''}`}>
