@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 245 166" role="img" aria-label="Swire logo">
+  <rect width="245" height="166" fill="#0c0c0c" />
+  <rect x="5" y="5" width="235" height="156" fill="#f0f0f0" />
+  <polygon points="5,10 108,80 5,156" fill="#d04f45" />
+  <polygon points="240,10 137,80 240,156" fill="#d04f45" />
+  <rect x="109" y="5" width="28" height="156" fill="#35559f" />
+</svg>
