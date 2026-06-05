@@ -9,7 +9,7 @@ An AI-powered procurement assistant prototype for **Swire Properties' PMP (Procu
 ```
 ┌─────────────┐     HTTP/SSE      ┌─────────────────────┐    HTTP (internal)    ┌───────────────────┐
 │   Frontend   │ ───────────────▶  │  Agent API (:8000)  │ ──────────────────▶   │ Mock PMP API      │
-│  (Derrick)   │ ◀──────────────── │  LangGraph pipeline │ ◀────────────────── │ (:8001)            │
+│  (Frontend)  │ ◀──────────────── │  LangGraph pipeline │ ◀────────────────── │ (:8001)            │
 └─────────────┘   JSON / SSE      └─────────────────────┘   JSON               └────────┬──────────┘
                                                                                          │
                                                                                          ▼
@@ -69,9 +69,9 @@ Sensitive POs (e.g. `RESTRICTED001`) are hidden from unauthorized users. This is
 
 | Key | Name | Role | Department | Description |
 |---|---|---|---|---|
-| `coco` | Coco WH Wong | Submitter | CPAC - Cityplaza Management Office | Property Manager. Sees her own and cost-centre-authorized POs |
-| `nam` | Nam Cheung | Endorser | CPAC - Cityplaza Management Office | Endorser. Sees items pending his approval |
-| `finance` | Fiona Lee | Finance | HFIN - Head Office FIN | Finance user. Sees payment and PA processing details |
+| `coco` | Alice Tan | Submitter | CPAC - Cityplaza Management Office | Property Manager. Sees her own and cost-centre-authorized POs |
+| `nam` | Bob Chen | Endorser | CPAC - Cityplaza Management Office | Endorser. Sees items pending his approval |
+| `finance` | Carol Wong | Finance | HFIN - Head Office FIN | Finance user. Sees payment and PA processing details |
 | `admin` | Admin Demo | Admin | Digital / IT | Demo superuser. Sees all seeded records |
 
 ---

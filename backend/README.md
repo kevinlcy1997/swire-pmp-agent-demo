@@ -4,7 +4,7 @@ Python prototype for the Swire PMP Procurement / POPA AI Assistant demo.
 
 The backend is split into two FastAPI services:
 
-- `agent_api`: LangGraph-style agent API consumed by Derrick's frontend.
+- `agent_api`: LangGraph-style agent API consumed by the frontend.
 - `mock_pmp_api`: simulated PMP backend that owns SQLite access and enforces RBAC.
 
 The agent never reads the demo database directly. It calls the mock PMP APIs, and those APIs return only records authorized for the active demo user.
@@ -33,7 +33,7 @@ Terminal 2:
 
 ## Frontend Contract
 
-Derrick's frontend should call the agent API only.
+The frontend should call the agent API only.
 
 ```http
 GET http://localhost:8000/api/demo/users
