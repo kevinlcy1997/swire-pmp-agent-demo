@@ -18,7 +18,7 @@ DEMO_USERS: dict[str, DemoUser] = {
     "coco": DemoUser(
         user_key="coco",
         user_id="618731",
-        name="Coco WH Wong",
+        name="Alice Tan",
         role="Submitter",
         department="CPAC - Cityplaza Management Office",
         cost_centre_code="067007",
@@ -27,7 +27,7 @@ DEMO_USERS: dict[str, DemoUser] = {
     "nam": DemoUser(
         user_key="nam",
         user_id="782144",
-        name="Nam Cheung",
+        name="Bob Chen",
         role="Endorser",
         department="CPAC - Cityplaza Management Office",
         cost_centre_code="067007",
@@ -36,7 +36,7 @@ DEMO_USERS: dict[str, DemoUser] = {
     "finance": DemoUser(
         user_key="finance",
         user_id="900201",
-        name="Fiona Lee",
+        name="Carol Wong",
         role="Finance",
         department="HFIN - Head Office FIN",
         cost_centre_code="HFIN",
@@ -50,6 +50,15 @@ DEMO_USERS: dict[str, DemoUser] = {
         department="Digital / IT",
         cost_centre_code="ALL",
         description="Demo superuser. Sees all seeded records.",
+    ),
+    "maggie": DemoUser(
+        user_key="maggie",
+        user_id="700445",
+        name="Diana Lau",
+        role="Submitter",
+        department="PPAC - Pacific Place Management Office",
+        cost_centre_code="088888",
+        description="Property Manager at Pacific Place. Only sees her own POs.",
     ),
 }
 

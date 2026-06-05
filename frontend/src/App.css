@@ -499,3 +499,54 @@ input {
     font-size: 1.2rem;
   }
 }
+
+/* Markdown content in chat bubbles */
+.md-content p {
+  margin: 0 0 0.4rem 0;
+}
+
+.md-content p:last-child {
+  margin-bottom: 0;
+}
+
+.md-table-wrapper {
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+
+.md-table {
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  width: 100%;
+  min-width: 400px;
+}
+
+.md-table th,
+.md-table td {
+  border: 1px solid #c8d3e0;
+  padding: 0.35rem 0.6rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.md-table th {
+  background: #1a3a5c;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.md-table tr:nth-child(even) {
+  background: rgba(26, 58, 92, 0.05);
+}
+
+.md-table tr:hover {
+  background: rgba(26, 58, 92, 0.1);
+}
+
+.received-bubble .md-content {
+  max-width: 100%;
+}
+
+.received-bubble:has(.md-table) {
+  max-width: min(700px, 90vw);
+}

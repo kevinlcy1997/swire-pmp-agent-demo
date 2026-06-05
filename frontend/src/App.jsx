@@ -2,7 +2,54 @@ import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import swireLogo from './assets/swire-logo.svg'
 
-const quickActions = ['Check another PO', 'Show related documents', 'Vendor details']
+function MarkdownContent({ text }) {
+  const parts = text.split('\n\n')
+  const elements = []
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i].trim()
+    if (!part) continue
+
+    if (part.startsWith('|') && part.includes('---')) {
+      const lines = part.split('\n').filter((l) => l.trim())
+      const headerLine = lines[0]
+      const dataLines = lines.slice(2)
+      const headers = headerLine.split('|').filter((c) => c.trim()).map((c) => c.trim())
+      const rows = dataLines.map((line) =>
+        line.split('|').filter((c) => c.trim()).map((c) => c.trim()),
+      )
+      elements.push(
+        <div key={i} className="md-table-wrapper">
+          <table className="md-table">
+            <thead>
+              <tr>
+                {headers.map((h, hi) => (
+                  <th key={hi}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, ri) => (
+                <tr key={ri}>
+                  {row.map((cell, ci) => (
+                    <td key={ci}>{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>,
+      )
+    } else {
+      const formatted = part.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>')
+      elements.push(<p key={i} dangerouslySetInnerHTML={{ __html: formatted }} />)
+    }
+  }
+
+  return <div className="md-content">{elements}</div>
+}
+
+const quickActions = ['What\'s the payment status of my lobby signage PO?', 'Show my pending POs', 'What is pending my approval?']
 
 const defaultConversationTemplates = [
   {
@@ -130,7 +177,7 @@ async function apiRequest(path, { method = 'GET', body, token } = {}) {
 }
 
 function LoginScreen({ onLogin, loading, error }) {
-  const [username, setUsername] = useState('john')
+  const [username, setUsername] = useState('coco')
   const [password, setPassword] = useState('password123')
 
   const handleSubmit = (event) => {
@@ -498,7 +545,7 @@ function App() {
                 <div className={`message-row ${message.role === 'user' ? 'sent' : 'received'}`}>
                   {message.role === 'assistant' && <div className="bot-icon">🤖</div>}
                   <div className={`message bubble ${message.role === 'user' ? 'sent-bubble' : 'received-bubble'}`}>
-                    {message.text}
+                    {message.role === 'assistant' ? <MarkdownContent text={message.text} /> : message.text}
                   </div>
                 </div>
                 <div className={`timestamp ${message.role === 'user' ? 'sent-time' : ''}`}>

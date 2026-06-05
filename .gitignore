@@ -12,3 +12,4 @@ backend/data/*.db
 *.pdf
 *.xlsx
 *.zip
+.service-pids

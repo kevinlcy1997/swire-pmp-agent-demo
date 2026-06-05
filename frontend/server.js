@@ -7,6 +7,7 @@ import express from 'express'
 import rateLimit from 'express-rate-limit'
 
 const PORT = Number(process.env.PORT || 3001)
+const AGENT_API_URL = process.env.AGENT_API_URL || 'http://127.0.0.1:8000'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const dataDirectory = path.join(__dirname, 'data')
@@ -44,23 +45,34 @@ database.exec(`
   );
 `)
 
-database
-  .prepare(
-    `
-      INSERT INTO users (username, password, display_name, department)
-      VALUES (@username, @password, @display_name, @department)
-      ON CONFLICT(username) DO UPDATE SET
-        password = excluded.password,
-        display_name = excluded.display_name,
-        department = excluded.department
-    `,
-  )
-  .run({
-    username: 'john',
-    password: 'password123',
-    display_name: 'John Smith',
-    department: 'Finance',
-  })
+// Add demo_user_key column if it doesn't exist
+try {
+  database.exec('ALTER TABLE users ADD COLUMN demo_user_key TEXT')
+} catch {
+  // Column already exists
+}
+
+const upsertUser = database.prepare(`
+  INSERT INTO users (username, password, display_name, department, demo_user_key)
+  VALUES (@username, @password, @display_name, @department, @demo_user_key)
+  ON CONFLICT(username) DO UPDATE SET
+    password = excluded.password,
+    display_name = excluded.display_name,
+    department = excluded.department,
+    demo_user_key = excluded.demo_user_key
+`)
+
+const demoUsers = [
+  { username: 'coco', password: 'password123', display_name: 'Alice Tan', department: 'CPAC - Cityplaza Management Office', demo_user_key: 'coco' },
+  { username: 'nam', password: 'password123', display_name: 'Bob Chen', department: 'CPAC - Cityplaza Management Office', demo_user_key: 'nam' },
+  { username: 'finance', password: 'password123', display_name: 'Carol Wong', department: 'HFIN - Head Office FIN', demo_user_key: 'finance' },
+  { username: 'admin', password: 'password123', display_name: 'Admin Demo', department: 'Digital / IT', demo_user_key: 'admin' },
+  { username: 'maggie', password: 'password123', display_name: 'Diana Lau', department: 'PPAC - Pacific Place Management Office', demo_user_key: 'maggie' },
+]
+
+for (const user of demoUsers) {
+  upsertUser.run(user)
+}
 
 const app = express()
 app.use(express.json())
@@ -96,7 +108,8 @@ function authenticate(req, res, next) {
           u.id AS userId,
           u.username,
           u.display_name AS displayName,
-          u.department
+          u.department,
+          u.demo_user_key AS demoUserKey
         FROM sessions s
         INNER JOIN users u ON u.id = s.user_id
         WHERE s.token = ?
@@ -126,7 +139,7 @@ app.post('/api/login', (req, res) => {
   const user = database
     .prepare(
       `
-        SELECT id AS userId, username, display_name AS displayName, department
+        SELECT id AS userId, username, display_name AS displayName, department, demo_user_key AS demoUserKey
         FROM users
         WHERE username = ? AND password = ?
       `,
@@ -190,7 +203,7 @@ app.get('/api/chat/history', authenticate, (req, res) => {
   res.json({ messages })
 })
 
-app.post('/api/chat', authenticate, (req, res) => {
+app.post('/api/chat', authenticate, async (req, res) => {
   const text = String(req.body?.message || '').trim()
   if (!text) {
     res.status(400).json({ error: 'Message is required' })
@@ -207,9 +220,26 @@ app.post('/api/chat', authenticate, (req, res) => {
     )
     .run(req.user.userId, text, now)
 
-  const replyText = 'Received'
-  const replyTime = new Date().toISOString()
+  let replyText = 'Sorry, the AI agent is unavailable right now.'
+  try {
+    const demoUserKey = req.user.demoUserKey || req.user.username
+    const agentResponse = await fetch(`${AGENT_API_URL}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Demo-User': demoUserKey,
+      },
+      body: JSON.stringify({ message: text }),
+    })
+    if (agentResponse.ok) {
+      const agentData = await agentResponse.json()
+      replyText = agentData.answer || replyText
+    }
+  } catch {
+    // Agent API unreachable — fall back to error message
+  }
 
+  const replyTime = new Date().toISOString()
   const assistantInsert = database
     .prepare(
       `

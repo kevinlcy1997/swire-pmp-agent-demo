@@ -47,6 +47,8 @@ async def select_tools(state: AgentState) -> AgentState:
         plan.append({"name": "pending_approvals", "args": {}})
     elif intent == "pending_pos":
         plan.append({"name": "po_list", "args": {"status": "Pending Endorser"}})
+    elif intent == "all_pos":
+        plan.append({"name": "po_list", "args": {}})
     elif intent == "budget_summary":
         plan.append({"name": "budget_summary", "args": {}})
     elif intent == "po_detail" and po_no:

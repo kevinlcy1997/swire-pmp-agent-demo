@@ -22,4 +22,6 @@ def classify_intent(message: str) -> str:
         return "po_detail"
     if "pending po" in text or "my pending" in text or "show my pending" in text:
         return "pending_pos"
+    if "all po" in text or "list po" in text or "show po" in text or "all purchase" in text or "every po" in text:
+        return "all_pos"
     return "general_po_search"
