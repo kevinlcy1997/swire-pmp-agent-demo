@@ -38,7 +38,7 @@ The frontend should call the agent API only.
 ```http
 GET http://localhost:8000/api/demo/users
 POST http://localhost:8000/api/chat/stream
-X-Demo-User: coco
+X-Demo-User: alice
 Content-Type: application/json
 
 {
@@ -49,8 +49,8 @@ Content-Type: application/json
 
 Supported `X-Demo-User` values:
 
-- `coco`
-- `nam`
+- `alice`
+- `bob`
 - `finance`
 - `admin`
 

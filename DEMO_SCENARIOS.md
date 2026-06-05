@@ -14,9 +14,9 @@ This document provides step-by-step demo scenarios to showcase the AI assistant'
 
 | Step | Login As | Expected Result |
 |---|---|---|
-| 1 | `coco` / `password123` (Alice Tan — Submitter, Cityplaza) | Sees **3 POs** — only her own CPAC POs (FAIT2015600, CPAC2015601, CPAC2018802) |
-| 2 | `maggie` / `password123` (Diana Lau — Submitter, Pacific Place) | Sees **2 POs** — only her own PPAC POs (PPAC2017777, PPAC2018801) |
-| 3 | `nam` / `password123` (Bob Chen — Endorser) | Sees **9 POs** — all non-sensitive POs across all properties (he is in every approval route) |
+| 1 | `alice` / `password123` (Alice Tan — Submitter, Cityplaza) | Sees **3 POs** — only her own CPAC POs (FAIT2015600, CPAC2015601, CPAC2018802) |
+| 2 | `diana` / `password123` (Diana Lau — Submitter, Pacific Place) | Sees **2 POs** — only her own PPAC POs (PPAC2017777, PPAC2018801) |
+| 3 | `bob` / `password123` (Bob Chen — Endorser) | Sees **9 POs** — all non-sensitive POs across all properties (he is in every approval route) |
 | 4 | `admin` / `password123` (Admin Demo) | Sees **all 10 POs** — including the sensitive RESTRICTED001 |
 
 **Key takeaway:** Two submitters (Alice & Diana) at the same role level see completely different POs because they belong to different properties/cost centres.
@@ -31,8 +31,8 @@ This document provides step-by-step demo scenarios to showcase the AI assistant'
 
 | Step | Login As | Expected Result |
 |---|---|---|
-| 1 | `coco` / `password123` (Alice Tan — Submitter) | ❌ "couldn't find an authorized PO" — no vendor name, no amount leaked |
-| 2 | `maggie` / `password123` (Diana Lau — Submitter) | ❌ Same denial — even though Diana submitted it, it's marked sensitive |
+| 1 | `alice` / `password123` (Alice Tan — Submitter) | ❌ "couldn't find an authorized PO" — no vendor name, no amount leaked |
+| 2 | `diana` / `password123` (Diana Lau — Submitter) | ❌ Same denial — even though Diana submitted it, it's marked sensitive |
 | 3 | `finance` / `password123` (Carol Wong — Finance) | ✅ Sees the PO — Finance can view it because a Purchase Authorization (PA54321) is linked |
 | 4 | `admin` / `password123` (Admin Demo) | ✅ Sees full details — HKD 250,000, Restricted Security Works Ltd |
 
@@ -48,9 +48,9 @@ This document provides step-by-step demo scenarios to showcase the AI assistant'
 
 | Step | Login As | Expected Result |
 |---|---|---|
-| 1 | `coco` / `password123` (Alice Tan — Cityplaza) | ❌ Blocked — TKO Gateway is not her cost centre |
-| 2 | `maggie` / `password123` (Diana Lau — Pacific Place) | ❌ Blocked — TKO Gateway is not her cost centre |
-| 3 | `nam` / `password123` (Bob Chen — Endorser) | ✅ Sees the PO — he endorsed it (in the approval route) |
+| 1 | `alice` / `password123` (Alice Tan — Cityplaza) | ❌ Blocked — TKO Gateway is not her cost centre |
+| 2 | `diana` / `password123` (Diana Lau — Pacific Place) | ❌ Blocked — TKO Gateway is not her cost centre |
+| 3 | `bob` / `password123` (Bob Chen — Endorser) | ✅ Sees the PO — he endorsed it (in the approval route) |
 | 4 | `admin` / `password123` (Admin Demo) | ✅ Sees full details |
 
 **Key takeaway:** Property-level data isolation is enforced. Only users in the approval chain or with higher roles can see cross-property POs.
@@ -65,8 +65,8 @@ This document provides step-by-step demo scenarios to showcase the AI assistant'
 
 | Step | Login As | Expected Result |
 |---|---|---|
-| 1 | `coco` / `password123` (Alice Tan — Submitter) | "no authorized procurement items pending your approval" — submitters don't approve |
-| 2 | `nam` / `password123` (Bob Chen — Endorser) | Sees **4 pending items**: CPAC2015601, PPAC2017777, TKOT2019002, IEAS2019004 — with escalation rules |
+| 1 | `alice` / `password123` (Alice Tan — Submitter) | "no authorized procurement items pending your approval" — submitters don't approve |
+| 2 | `bob` / `password123` (Bob Chen — Endorser) | Sees **4 pending items**: CPAC2015601, PPAC2017777, TKOT2019002, IEAS2019004 — with escalation rules |
 | 3 | `admin` / `password123` (Admin Demo) | Sees the same **4 pending items** — admin sees all pending across the org |
 
 **Key takeaway:** Submitters see nothing in the approval queue. Endorsers see items assigned to them. Admin sees everything.
@@ -81,8 +81,8 @@ This document provides step-by-step demo scenarios to showcase the AI assistant'
 
 | Step | Login As | Expected Result |
 |---|---|---|
-| 1 | `coco` / `password123` (Alice Tan) | ✅ Sees PA12345 — Pending Payment Processing, expected date 2026-06-12 |
-| 2 | `maggie` / `password123` (Diana Lau) | ✅ Sees the same PA — the PO (FAIT2015600) is visible to her via the PMP API search |
+| 1 | `alice` / `password123` (Alice Tan) | ✅ Sees PA12345 — Pending Payment Processing, expected date 2026-06-12 |
+| 2 | `diana` / `password123` (Diana Lau) | ✅ Sees the same PA — the PO (FAIT2015600) is visible to her via the PMP API search |
 | 3 | `finance` / `password123` (Carol Wong) | ✅ Sees payment details — Finance has visibility on all POs with linked PAs |
 
 ---
@@ -95,7 +95,7 @@ This document provides step-by-step demo scenarios to showcase the AI assistant'
 
 | Step | Login As | Expected Result |
 |---|---|---|
-| 1 | `coco` / `password123` (Alice Tan — cost centre 067007) | Sees **2 budget lines** — 067007 signage (Sufficient) and repairs (Near Limit) |
+| 1 | `alice` / `password123` (Alice Tan — cost centre 067007) | Sees **2 budget lines** — 067007 signage (Sufficient) and repairs (Near Limit) |
 | 2 | `finance` / `password123` (Carol Wong — cost centre HFIN) | Sees **0 budget lines** — HFIN has no seeded budgets |
 | 3 | `admin` / `password123` (Admin Demo) | Sees **all 8 budget lines** across all cost centres including Restricted |
 
@@ -111,8 +111,8 @@ This document provides step-by-step demo scenarios to showcase the AI assistant'
 
 | Step | Login As | Expected Result |
 |---|---|---|
-| 1 | `coco` / `password123` (Alice Tan — Cityplaza) | Sees **1 PO**: CPAC2015601 (Lift lobby marble repair, HKD 128,000) |
-| 2 | `maggie` / `password123` (Diana Lau — Pacific Place) | Sees **1 PO**: PPAC2017777 (Pacific Place signage refresh, HKD 78,000) |
+| 1 | `alice` / `password123` (Alice Tan — Cityplaza) | Sees **1 PO**: CPAC2015601 (Lift lobby marble repair, HKD 128,000) |
+| 2 | `diana` / `password123` (Diana Lau — Pacific Place) | Sees **1 PO**: PPAC2017777 (Pacific Place signage refresh, HKD 78,000) |
 | 3 | `admin` / `password123` (Admin Demo) | Sees **4 POs**: all pending POs across all properties |
 
 **Key takeaway:** Same role, same question — completely different results based on cost centre ownership.
@@ -123,11 +123,11 @@ This document provides step-by-step demo scenarios to showcase the AI assistant'
 
 | Username | Password | Display Name | Role | Property |
 |---|---|---|---|---|
-| `coco` | `password123` | Alice Tan | Submitter | Cityplaza (CPAC) |
-| `nam` | `password123` | Bob Chen | Endorser | Cityplaza (CPAC) |
+| `alice` | `password123` | Alice Tan | Submitter | Cityplaza (CPAC) |
+| `bob` | `password123` | Bob Chen | Endorser | Cityplaza (CPAC) |
 | `finance` | `password123` | Carol Wong | Finance | Head Office (HFIN) |
 | `admin` | `password123` | Admin Demo | Admin | All |
-| `maggie` | `password123` | Diana Lau | Submitter | Pacific Place (PPAC) |
+| `diana` | `password123` | Diana Lau | Submitter | Pacific Place (PPAC) |
 
 ## Quick Reference: Supported Questions
 

@@ -63,11 +63,11 @@ const upsertUser = database.prepare(`
 `)
 
 const demoUsers = [
-  { username: 'coco', password: 'password123', display_name: 'Alice Tan', department: 'CPAC - Cityplaza Management Office', demo_user_key: 'coco' },
-  { username: 'nam', password: 'password123', display_name: 'Bob Chen', department: 'CPAC - Cityplaza Management Office', demo_user_key: 'nam' },
+  { username: 'alice', password: 'password123', display_name: 'Alice Tan', department: 'CPAC - Cityplaza Management Office', demo_user_key: 'alice' },
+  { username: 'bob', password: 'password123', display_name: 'Bob Chen', department: 'CPAC - Cityplaza Management Office', demo_user_key: 'bob' },
   { username: 'finance', password: 'password123', display_name: 'Carol Wong', department: 'HFIN - Head Office FIN', demo_user_key: 'finance' },
   { username: 'admin', password: 'password123', display_name: 'Admin Demo', department: 'Digital / IT', demo_user_key: 'admin' },
-  { username: 'maggie', password: 'password123', display_name: 'Diana Lau', department: 'PPAC - Pacific Place Management Office', demo_user_key: 'maggie' },
+  { username: 'diana', password: 'password123', display_name: 'Diana Lau', department: 'PPAC - Pacific Place Management Office', demo_user_key: 'diana' },
 ]
 
 for (const user of demoUsers) {

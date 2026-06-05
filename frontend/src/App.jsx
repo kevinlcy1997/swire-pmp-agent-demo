@@ -177,7 +177,7 @@ async function apiRequest(path, { method = 'GET', body, token } = {}) {
 }
 
 function LoginScreen({ onLogin, loading, error }) {
-  const [username, setUsername] = useState('coco')
+  const [username, setUsername] = useState('alice')
   const [password, setPassword] = useState('password123')
 
   const handleSubmit = (event) => {

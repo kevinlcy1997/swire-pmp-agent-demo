@@ -8,7 +8,7 @@ def setup_module() -> None:
 
 
 def test_coco_cannot_see_restricted_po() -> None:
-    assert get_po_detail(get_demo_user("coco"), "RESTRICTED001") is None
+    assert get_po_detail(get_demo_user("alice"), "RESTRICTED001") is None
 
 
 def test_admin_can_see_restricted_po() -> None:
@@ -18,14 +18,14 @@ def test_admin_can_see_restricted_po() -> None:
 
 
 def test_coco_sees_own_cost_centre_pending_po() -> None:
-    records = list_pos(get_demo_user("coco"), status="Pending Endorser")
+    records = list_pos(get_demo_user("alice"), status="Pending Endorser")
     po_numbers = {record["po_no"] for record in records}
     assert "CPAC2015601" in po_numbers
     assert "RESTRICTED001" not in po_numbers
 
 
 def test_nam_sees_items_pending_his_approval() -> None:
-    records = pending_approvals(get_demo_user("nam"))
+    records = pending_approvals(get_demo_user("bob"))
     po_numbers = {record["po_no"] for record in records}
     assert "CPAC2015601" in po_numbers
     assert "PPAC2017777" in po_numbers

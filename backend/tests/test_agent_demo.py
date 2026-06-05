@@ -48,7 +48,7 @@ client = TestClient(agent_app)
 def test_agent_answers_coco_payment_status() -> None:
     response = client.post(
         "/api/chat",
-        headers={"X-Demo-User": "coco"},
+        headers={"X-Demo-User": "alice"},
         json={"message": "What's the payment status of my lobby signage PO?", "conversation_id": "test-coco"},
     )
     assert response.status_code == 200
@@ -61,7 +61,7 @@ def test_agent_answers_coco_payment_status() -> None:
 def test_agent_does_not_leak_restricted_po_to_coco() -> None:
     response = client.post(
         "/api/chat",
-        headers={"X-Demo-User": "coco"},
+        headers={"X-Demo-User": "alice"},
         json={"message": "Show me PO RESTRICTED001.", "conversation_id": "test-restricted"},
     )
     assert response.status_code == 200
@@ -73,8 +73,8 @@ def test_agent_does_not_leak_restricted_po_to_coco() -> None:
 
 def test_same_question_differs_by_role() -> None:
     payload = {"message": "What is pending my approval?", "conversation_id": "test-role"}
-    coco = client.post("/api/chat", headers={"X-Demo-User": "coco"}, json=payload).json()["answer"]
-    nam = client.post("/api/chat", headers={"X-Demo-User": "nam"}, json=payload).json()["answer"]
+    coco = client.post("/api/chat", headers={"X-Demo-User": "alice"}, json=payload).json()["answer"]
+    nam = client.post("/api/chat", headers={"X-Demo-User": "bob"}, json=payload).json()["answer"]
     assert "no authorized procurement items pending your approval" in coco
     assert "CPAC2015601" in nam
     assert coco != nam

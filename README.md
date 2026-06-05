@@ -69,8 +69,8 @@ Sensitive POs (e.g. `RESTRICTED001`) are hidden from unauthorized users. This is
 
 | Key | Name | Role | Department | Description |
 |---|---|---|---|---|
-| `coco` | Alice Tan | Submitter | CPAC - Cityplaza Management Office | Property Manager. Sees her own and cost-centre-authorized POs |
-| `nam` | Bob Chen | Endorser | CPAC - Cityplaza Management Office | Endorser. Sees items pending his approval |
+| `alice` | Alice Tan | Submitter | CPAC - Cityplaza Management Office | Property Manager. Sees her own and cost-centre-authorized POs |
+| `bob` | Bob Chen | Endorser | CPAC - Cityplaza Management Office | Endorser. Sees items pending his approval |
 | `finance` | Carol Wong | Finance | HFIN - Head Office FIN | Finance user. Sees payment and PA processing details |
 | `admin` | Admin Demo | Admin | Digital / IT | Demo superuser. Sees all seeded records |
 
@@ -170,15 +170,15 @@ npm run dev
 ### 4. Open the Demo
 
 1. Open **http://localhost:5173**
-2. Login as **coco** / **password123**
+2. Login as **alice** / **password123**
 3. Try a question: _"What's the payment status of my lobby signage PO?"_
 
 ### Demo Logins
 
 | Username | Password | Role | Description |
 |---|---|---|---|
-| `coco` | `password123` | Submitter | Property Manager — sees her own POs |
-| `nam` | `password123` | Endorser | Sees items pending his approval |
+| `alice` | `password123` | Submitter | Property Manager — sees her own POs |
+| `bob` | `password123` | Endorser | Sees items pending his approval |
 | `finance` | `password123` | Finance | Sees payment/PA details |
 | `admin` | `password123` | Admin | Sees all records |
 ```
@@ -202,7 +202,7 @@ npm run dev
 
 ```http
 POST http://localhost:8000/api/chat/stream
-X-Demo-User: coco
+X-Demo-User: alice
 Content-Type: application/json
 
 {

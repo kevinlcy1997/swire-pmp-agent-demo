@@ -165,11 +165,11 @@ def seed() -> None:
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             [
-                ("618731", "coco", "Alice Tan", "alice.tan@swireproperties.com", "CPAC - Cityplaza Management Office", "067007", "Submitter"),
-                ("782144", "nam", "Bob Chen", "bob.chen@swireproperties.com", "CPAC - Cityplaza Management Office", "067007", "Endorser"),
+                ("618731", "alice", "Alice Tan", "alice.tan@swireproperties.com", "CPAC - Cityplaza Management Office", "067007", "Submitter"),
+                ("782144", "bob", "Bob Chen", "bob.chen@swireproperties.com", "CPAC - Cityplaza Management Office", "067007", "Endorser"),
                 ("900201", "finance", "Carol Wong", "carol.wong@swireproperties.com", "HFIN - Head Office FIN", "HFIN", "Finance"),
                 ("000001", "admin", "Admin Demo", "admin.demo@swireproperties.com", "Digital / IT", "ALL", "Admin"),
-                ("700445", "maggie", "Diana Lau", "diana.lau@swireproperties.com", "PPAC - Pacific Place Management Office", "088888", "Submitter"),
+                ("700445", "diana", "Diana Lau", "diana.lau@swireproperties.com", "PPAC - Pacific Place Management Office", "088888", "Submitter"),
                 ("811002", "tko_peter", "Edward Ho", "edward.ho@swireproperties.com", "TKOT - TKO Gateway Management Office", "055012", "Submitter"),
                 ("811003", "ie_jenny", "Fiona Yip", "fiona.yip@swireproperties.com", "IEAS - Island East Management Office", "033009", "Submitter"),
             ],

@@ -12,12 +12,12 @@ def test_agent_chat_returns_payment_status_from_pmp_api() -> None:
     client = TestClient(app)
     response = client.post(
         "/api/chat",
-        headers={"X-Demo-User": "coco"},
+        headers={"X-Demo-User": "alice"},
         json={"message": "What's the payment status of my lobby signage PO?", "conversation_id": "test-1"},
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["user_key"] == "coco"
+    assert data["user_key"] == "alice"
     assert "PA12345" in data["answer"]
     assert "Source: PMP API" in data["answer"]
 
@@ -26,7 +26,7 @@ def test_agent_does_not_leak_restricted_po_to_coco() -> None:
     client = TestClient(app)
     response = client.post(
         "/api/chat",
-        headers={"X-Demo-User": "coco"},
+        headers={"X-Demo-User": "alice"},
         json={"message": "Show me PO RESTRICTED001", "conversation_id": "test-2"},
     )
     assert response.status_code == 200

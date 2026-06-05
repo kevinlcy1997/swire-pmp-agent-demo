@@ -15,8 +15,8 @@ class DemoUser:
 
 
 DEMO_USERS: dict[str, DemoUser] = {
-    "coco": DemoUser(
-        user_key="coco",
+    "alice": DemoUser(
+        user_key="alice",
         user_id="618731",
         name="Alice Tan",
         role="Submitter",
@@ -24,8 +24,8 @@ DEMO_USERS: dict[str, DemoUser] = {
         cost_centre_code="067007",
         description="Property Manager. Sees her own and cost-centre-authorized POs.",
     ),
-    "nam": DemoUser(
-        user_key="nam",
+    "bob": DemoUser(
+        user_key="bob",
         user_id="782144",
         name="Bob Chen",
         role="Endorser",
@@ -51,8 +51,8 @@ DEMO_USERS: dict[str, DemoUser] = {
         cost_centre_code="ALL",
         description="Demo superuser. Sees all seeded records.",
     ),
-    "maggie": DemoUser(
-        user_key="maggie",
+    "diana": DemoUser(
+        user_key="diana",
         user_id="700445",
         name="Diana Lau",
         role="Submitter",
@@ -65,7 +65,7 @@ DEMO_USERS: dict[str, DemoUser] = {
 
 def get_demo_user(user_key: str | None) -> DemoUser:
     if not user_key:
-        return DEMO_USERS["coco"]
+        return DEMO_USERS["alice"]
     normalized = user_key.strip().lower()
     if normalized not in DEMO_USERS:
         raise KeyError(f"Unknown demo user: {user_key}")
