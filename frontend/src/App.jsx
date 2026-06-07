@@ -1,30 +1,39 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
 import swireLogo from './assets/swire-logo.svg'
 
+function formatInline(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+}
+
 function MarkdownContent({ text }) {
-  const parts = text.split('\n\n')
+  const lines = text.split('\n')
   const elements = []
+  let i = 0
+  let key = 0
 
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i].trim()
-    if (!part) continue
+  while (i < lines.length) {
+    const line = lines[i]
 
-    if (part.startsWith('|') && part.includes('---')) {
-      const lines = part.split('\n').filter((l) => l.trim())
-      const headerLine = lines[0]
-      const dataLines = lines.slice(2)
-      const headers = headerLine.split('|').filter((c) => c.trim()).map((c) => c.trim())
-      const rows = dataLines.map((line) =>
-        line.split('|').filter((c) => c.trim()).map((c) => c.trim()),
-      )
+    // Detect table: current line starts with | and next line is separator (|---|)
+    if (line.trim().startsWith('|') && i + 1 < lines.length && /^\|[\s-:|]+\|/.test(lines[i + 1].trim())) {
+      const headers = line.split('|').filter((c) => c.trim()).map((c) => c.trim())
+      i += 2 // skip header + separator
+      const rows = []
+      while (i < lines.length && lines[i].trim().startsWith('|') && !(/^\|[\s-:|]+\|$/.test(lines[i].trim()) && lines[i].trim().replace(/[|\s-:]/g, '') === '')) {
+        const cells = lines[i].split('|').filter((c) => c.trim()).map((c) => c.trim())
+        if (cells.length > 0) rows.push(cells)
+        i++
+      }
       elements.push(
-        <div key={i} className="md-table-wrapper">
+        <div key={key++} className="md-table-wrapper">
           <table className="md-table">
             <thead>
               <tr>
                 {headers.map((h, hi) => (
-                  <th key={hi}>{h}</th>
+                  <th key={hi} dangerouslySetInnerHTML={{ __html: formatInline(h) }} />
                 ))}
               </tr>
             </thead>
@@ -32,7 +41,7 @@ function MarkdownContent({ text }) {
               {rows.map((row, ri) => (
                 <tr key={ri}>
                   {row.map((cell, ci) => (
-                    <td key={ci}>{cell}</td>
+                    <td key={ci} dangerouslySetInnerHTML={{ __html: formatInline(cell) }} />
                   ))}
                 </tr>
               ))}
@@ -40,10 +49,32 @@ function MarkdownContent({ text }) {
           </table>
         </div>,
       )
-    } else {
-      const formatted = part.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>')
-      elements.push(<p key={i} dangerouslySetInnerHTML={{ __html: formatted }} />)
+      continue
     }
+
+    // Headings (### etc.)
+    const headingMatch = line.match(/^(#{1,4})\s+(.+)/)
+    if (headingMatch) {
+      const level = headingMatch[1].length
+      const Tag = `h${Math.min(level + 2, 6)}`
+      elements.push(<Tag key={key++} className="md-heading" dangerouslySetInnerHTML={{ __html: formatInline(headingMatch[2]) }} />)
+      i++
+      continue
+    }
+
+    // Empty line — skip
+    if (!line.trim()) {
+      i++
+      continue
+    }
+
+    // Regular paragraph — collect consecutive non-empty, non-table, non-heading lines
+    let para = ''
+    while (i < lines.length && lines[i].trim() && !lines[i].trim().startsWith('|') && !lines[i].match(/^#{1,4}\s+/)) {
+      para += (para ? ' ' : '') + lines[i].trim()
+      i++
+    }
+    elements.push(<p key={key++} dangerouslySetInnerHTML={{ __html: formatInline(para) }} />)
   }
 
   return <div className="md-content">{elements}</div>
@@ -241,9 +272,11 @@ function App() {
   const [activeConversationId, setActiveConversationId] = useState('conversation-po-12321')
   const [inputValue, setInputValue] = useState('')
   const [isSending, setIsSending] = useState(false)
+  const [streamingText, setStreamingText] = useState(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
 
   const menuRef = useRef(null)
+  const streamingRef = useRef('')
 
   useEffect(() => {
     const closeMenuOnOutsideClick = (event) => {
@@ -314,10 +347,10 @@ function App() {
   }, [authToken])
 
   useEffect(() => {
-    if (!user?.username || conversations.length === 0) return
+    if (!user?.username || conversations.length === 0 || isSending) return
 
     localStorage.setItem(getConversationsStorageKey(user.username), JSON.stringify(conversations))
-  }, [conversations, user?.username])
+  }, [conversations, user?.username, isSending])
 
   useEffect(() => {
     if (!user?.username || !activeConversationId) return
@@ -412,7 +445,6 @@ function App() {
       createdAt: new Date().toISOString(),
     }
 
-    const streamingId = `stream-${Date.now()}`
     const thinkingId = `thinking-${Date.now()}`
 
     updateActiveConversationMessages((previousMessages) => [
@@ -422,6 +454,8 @@ function App() {
     ])
     setInputValue('')
     setIsSending(true)
+    streamingRef.current = ''
+    setStreamingText(null)
 
     try {
       const response = await fetch('/api/chat/stream', {
@@ -440,8 +474,17 @@ function App() {
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
       let buffer = ''
-      let streamedText = ''
       let streamingStarted = false
+      let rafId = null
+
+      const scheduleFlush = () => {
+        if (!rafId) {
+          rafId = requestAnimationFrame(() => {
+            rafId = null
+            setStreamingText(streamingRef.current)
+          })
+        }
+      }
 
       while (true) {
         const { done, value } = await reader.read()
@@ -479,57 +522,55 @@ function App() {
                 ),
               )
             } else if (eventType === 'delta') {
-              streamedText += parsed.content
               if (!streamingStarted) {
                 streamingStarted = true
+                // Remove thinking bubble — streaming overlay will show instead
                 updateActiveConversationMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === thinkingId
-                      ? { ...m, id: streamingId, text: streamedText, isThinking: false }
-                      : m,
-                  ),
-                )
-              } else {
-                updateActiveConversationMessages((prev) =>
-                  prev.map((m) => (m.id === streamingId ? { ...m, text: streamedText } : m)),
+                  prev.filter((m) => m.id !== thinkingId),
                 )
               }
+              streamingRef.current += parsed.content
+              scheduleFlush()
             } else if (eventType === 'answer' && !streamingStarted) {
-              // Non-streaming fallback — full answer in one go
-              updateActiveConversationMessages((prev) =>
-                prev.map((m) =>
-                  m.id === thinkingId
-                    ? { ...m, id: streamingId, text: parsed.content, isThinking: false }
-                    : m,
-                ),
-              )
               streamingStarted = true
-              streamedText = parsed.content
-            } else if (eventType === 'meta') {
-              // Replace temp messages with persisted DB versions
+              streamingRef.current = parsed.content
               updateActiveConversationMessages((prev) =>
-                prev.map((m) => {
-                  if (m.id === tempUserMessage.id) return parsed.userMessage
-                  if (m.id === streamingId) return { ...parsed.assistantMessage, text: streamedText || parsed.assistantMessage.text }
-                  return m
-                }),
+                prev.filter((m) => m.id !== thinkingId),
               )
+              setStreamingText(parsed.content)
+            } else if (eventType === 'meta') {
+              if (rafId) cancelAnimationFrame(rafId)
+              // Merge final messages into conversation state
+              const finalText = streamingRef.current || parsed.assistantMessage.text
+              updateActiveConversationMessages((prev) => [
+                ...prev.filter((m) => m.id !== tempUserMessage.id && m.id !== thinkingId),
+                parsed.userMessage,
+                { ...parsed.assistantMessage, text: finalText },
+              ])
+              setStreamingText(null)
+              streamingRef.current = ''
             }
           } catch {}
         }
       }
 
-      // If we never got a streaming response, clean up thinking bubble
+      if (rafId) cancelAnimationFrame(rafId)
+
+      // If we never got streaming or meta, finalize
       if (!streamingStarted) {
         updateActiveConversationMessages((prev) =>
           prev.map((m) =>
             m.id === thinkingId
-              ? { ...m, id: streamingId, text: 'Sorry, no response received.', isThinking: false }
+              ? { ...m, text: 'Sorry, no response received.', isThinking: false }
               : m,
           ),
         )
       }
+      setStreamingText(null)
+      streamingRef.current = ''
     } catch (error) {
+      setStreamingText(null)
+      streamingRef.current = ''
       updateActiveConversationMessages((previousMessages) => [
         ...previousMessages.filter((m) => m.id !== thinkingId),
         {
@@ -660,6 +701,17 @@ function App() {
                 </div>
               </div>
             ))}
+
+            {streamingText !== null && (
+              <div>
+                <div className="message-row received">
+                  <div className="bot-icon">🤖</div>
+                  <div className="message bubble received-bubble">
+                    <div className="md-content"><p style={{whiteSpace:'pre-wrap'}}>{streamingText || '▍'}</p></div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="chat-footer">

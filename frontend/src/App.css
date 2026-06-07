@@ -509,6 +509,12 @@ input {
   margin-bottom: 0;
 }
 
+.md-heading {
+  margin: 0.6rem 0 0.3rem;
+  font-size: 0.9rem;
+  color: #1a3a5c;
+}
+
 .md-table-wrapper {
   overflow-x: auto;
   margin: 0.5rem 0;
