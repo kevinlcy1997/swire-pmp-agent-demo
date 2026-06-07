@@ -22,6 +22,11 @@ VALID_INTENTS = [
     "vendor_payment_status",
     "pending_approvals",
     "pending_pos",
+    "longest_waiting_po",
+    "po_volume_summary",
+    "delayed_approval_summary",
+    "po_pending_party_analysis",
+    "po_approval_progress",
     "all_pos",
     "budget_summary",
     "po_detail",
@@ -38,7 +43,12 @@ Rules:
 - "vendor_payment_status": user asks about a specific vendor's payment or mentions a vendor name
 - "pending_approvals": user asks what is pending their approval
 - "pending_pos": user asks about their pending POs or POs awaiting action
-- "all_pos": user wants to see all POs, list all purchase orders
+- "longest_waiting_po": user asks which PO has waited the longest, longest wait time, oldest pending PO
+- "po_volume_summary": user asks for PO volume, PO count, monthly PO trend, purchase order count by month or status
+- "delayed_approval_summary": user asks for delayed approvals, overdue approvals, approval ageing, late approval summary, SLA breaches
+- "po_pending_party_analysis": user asks which party or approver is holding up PO approvals, pending by party, approval bottleneck
+- "po_approval_progress": user mentions a specific PO number and asks where it is stuck, approval progress, or approval route
+- "all_pos": user wants to see all POs, all of my POs, my purchase orders, list all purchase orders
 - "budget_summary": user asks about budget, remaining budget, spending
 - "po_detail": user mentions a specific PO number (e.g. FAIT2015600)
 - "general_po_search": anything else about POs or procurement

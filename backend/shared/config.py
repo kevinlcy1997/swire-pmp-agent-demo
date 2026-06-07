@@ -14,6 +14,7 @@ DB_PATH = Path(os.getenv("SWIRE_DEMO_DB", str(DATA_DIR / "swire_demo.sqlite3")))
 
 MOCK_PMP_BASE_URL = os.getenv("MOCK_PMP_BASE_URL", "http://127.0.0.1:8001")
 USE_REAL_LLM = os.getenv("USE_REAL_LLM", "false").lower() == "true"
+DEMO_TODAY = os.getenv("DEMO_TODAY", "2026-06-07")
 
 # Azure OpenAI settings
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "")

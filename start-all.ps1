@@ -6,8 +6,17 @@
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
-# Ensure Node.js is on PATH
-if (Test-Path "$env:LOCALAPPDATA\nodejs\node.exe") {
+# Ensure a modern Node.js is on PATH. The system Node on some Windows
+# machines is too old for the ES module frontend.
+$localNode = Resolve-Path (Join-Path $root ".tools\node-v*-win-x64\node.exe") -ErrorAction SilentlyContinue |
+    Select-Object -First 1
+$codexNode = Resolve-Path "$env:ProgramFiles\WindowsApps\OpenAI.Codex_*\app\resources\node.exe" -ErrorAction SilentlyContinue |
+    Select-Object -First 1
+if ($localNode) {
+    $env:PATH = "$([System.IO.Path]::GetDirectoryName($localNode.Path));$env:PATH"
+} elseif ($codexNode) {
+    $env:PATH = "$([System.IO.Path]::GetDirectoryName($codexNode.Path));$env:PATH"
+} elseif (Test-Path "$env:LOCALAPPDATA\nodejs\node.exe") {
     $env:PATH = "$env:LOCALAPPDATA\nodejs;$env:PATH"
 }
 
@@ -70,8 +79,8 @@ Start-Sleep -Seconds 2
 
 # Start Vite dev server (port 5173)
 Write-Host "Starting Vite dev server on :5173..." -ForegroundColor Cyan
-$viteBin = Join-Path $frontendDir "node_modules\.bin\vite.cmd"
-$feVite = Start-Process -FilePath $viteBin -ArgumentList "--port 5173" -WorkingDirectory $frontendDir -PassThru -WindowStyle Minimized
+$viteBin = Join-Path $frontendDir "node_modules\vite\bin\vite.js"
+$feVite = Start-Process -FilePath $nodeBin -ArgumentList "`"$viteBin`" --port 5173" -WorkingDirectory $frontendDir -PassThru -WindowStyle Minimized
 Start-Sleep -Seconds 3
 
 # Health checks

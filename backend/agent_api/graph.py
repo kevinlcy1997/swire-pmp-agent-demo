@@ -33,7 +33,13 @@ async def select_tools(state: AgentState) -> AgentState:
     intent = state["intent"]
     po_no = extract_po_no(message)
     plan: list[dict[str, Any]] = []
-    if intent == "payment_status":
+    if intent in {"longest_waiting_po", "po_pending_party_analysis", "delayed_approval_summary"}:
+        plan.append({"name": "pending_po_details", "args": {}})
+    elif intent == "po_volume_summary":
+        plan.append({"name": "po_list", "args": {}})
+    elif intent == "po_approval_progress" and po_no:
+        plan.append({"name": "po_detail", "args": {"po_no": po_no}})
+    elif intent == "payment_status":
         if po_no:
             plan.append({"name": "po_detail", "args": {"po_no": po_no}})
             plan.append({"name": "pa_status", "args": {"po_no": po_no}})
@@ -78,6 +84,8 @@ async def call_pmp_tools(state: AgentState) -> AgentState:
             result = await client.pending_approvals()
         elif name == "budget_summary":
             result = await client.budget_summary(**args)
+        elif name == "pending_po_details":
+            result = await _pending_po_details(client, **args)
         else:
             result = {"records": [], "count": 0, "error": f"Unknown tool: {name}"}
         results[name] = result
@@ -85,6 +93,21 @@ async def call_pmp_tools(state: AgentState) -> AgentState:
     state["tool_results"] = results
     state["tool_calls"] = calls
     return state
+
+
+async def _pending_po_details(client: PmpClient, status: str | None = None) -> dict[str, Any]:
+    args = {"status": status} if status else {}
+    po_list = await client.list_pos(**args)
+    detail_records: list[dict[str, Any]] = []
+    for record in po_list.get("records", []):
+        detail = await client.po_detail(record["po_no"])
+        if detail.get("record"):
+            detail_records.append(detail["record"])
+    return {
+        "records": detail_records,
+        "count": len(detail_records),
+        "source_tools": ["po_list", "po_detail"],
+    }
 
 
 async def compose_answer_node(state: AgentState) -> AgentState:
