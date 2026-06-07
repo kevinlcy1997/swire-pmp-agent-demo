@@ -102,7 +102,7 @@ foreach ($svc in @(
 Write-Host "`n============================================" -ForegroundColor Green
 Write-Host "  All services started!" -ForegroundColor Green
 Write-Host "  Open: http://localhost:5173" -ForegroundColor Yellow
-Write-Host "  Login: coco / password123" -ForegroundColor Yellow
+Write-Host "  Login: alice / password123" -ForegroundColor Yellow
 Write-Host "============================================" -ForegroundColor Green
 Write-Host "`nProcess IDs (use to stop later):"
 Write-Host "  Mock PMP API : $($mockPmp.Id)"
