@@ -82,8 +82,9 @@ async def chat_stream(
             yield _sse("tool_call", call)
             yield _sse("tool_result", {"tool": call["tool"], "result_count": call["result_count"], "source": "PMP API"})
 
-        # Compose answer — stream if LLM is enabled
-        if _config.USE_REAL_LLM:
+        # Compose answer — stream if LLM is enabled and intent is non-deterministic
+        from backend.agent_api.composer import compose_answer, DETERMINISTIC_INTENTS
+        if _config.USE_REAL_LLM and state["intent"] not in DETERMINISTIC_INTENTS:
             try:
                 from backend.agent_api.llm import llm_compose_answer_stream
                 full_answer = ""
@@ -98,11 +99,9 @@ async def chat_stream(
             except Exception as exc:
                 import logging
                 logging.getLogger(__name__).exception("LLM streaming failed: %s", exc)
-                from backend.agent_api.composer import compose_answer
                 state["answer"] = compose_answer(user, state["intent"], state["tool_results"], request.message)
                 yield _sse("answer", {"content": state["answer"], "conversation_id": conversation_id})
         else:
-            from backend.agent_api.composer import compose_answer
             state["answer"] = compose_answer(user, state["intent"], state["tool_results"], request.message)
             yield _sse("answer", {"content": state["answer"], "conversation_id": conversation_id})
 

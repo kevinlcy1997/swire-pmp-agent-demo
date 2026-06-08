@@ -13,17 +13,18 @@ logger = logging.getLogger(__name__)
 DETERMINISTIC_INTENTS = {
     "longest_waiting_po",
     "po_pending_party_analysis",
-    "po_approval_progress",
     "po_volume_summary",
     "delayed_approval_summary",
     "pending_approvals",
     "pending_pos",
     "all_pos",
     "budget_summary",
-    "po_detail",
     "general_po_search",
     "payment_status",
     "vendor_payment_status",
+    # NOTE: po_detail and po_approval_progress are NOT deterministic —
+    # the LLM can compose creative responses (e.g. email drafts) from
+    # the same data. Template fallback when USE_REAL_LLM=false.
 }
 
 

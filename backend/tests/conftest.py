@@ -1,6 +1,9 @@
-"""Force rule-based mode for all tests so assertions match deterministic template output."""
+"""Configure LLM mode for tests.
+
+Set USE_REAL_LLM = True  to test with Azure OpenAI (requires credentials in .env).
+Set USE_REAL_LLM = False to test with deterministic rule-based fallback (faster, no API calls).
+"""
 
 import backend.shared.config as config
 
-# Override before any test module imports the flag
-config.USE_REAL_LLM = False
+config.USE_REAL_LLM = True

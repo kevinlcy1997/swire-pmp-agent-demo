@@ -41,8 +41,11 @@ def list_pos(
     where, params = po_visibility_where(user)
     clauses = [where]
     if status and status.lower() != "all":
-        clauses.append("LOWER(po.status) = LOWER(?)")
-        params.append(status)
+        if status.lower() == "pending":
+            clauses.append("LOWER(po.status) LIKE 'pending%'")
+        else:
+            clauses.append("LOWER(po.status) = LOWER(?)")
+            params.append(status)
     if vendor_code:
         clauses.append("LOWER(v.vendor_code) = LOWER(?)")
         params.append(vendor_code)

@@ -1,9 +1,18 @@
-from backend.agent_api.intent import classify_intent, extract_po_no
+from backend.agent_api.intent import classify_intent, extract_po_no, extract_status_filter
 
 
 def test_extract_po_no() -> None:
     assert extract_po_no("Show PO FAIT2015600") == "FAIT2015600"
     assert extract_po_no("Show me PO RESTRICTED001") == "RESTRICTED001"
+
+
+def test_extract_status_filter() -> None:
+    assert extract_status_filter("my approved POs") == "Approved"
+    assert extract_status_filter("show rejected POs") == "Rejected"
+    assert extract_status_filter("my pending POs") == "pending"
+    assert extract_status_filter("pending endorser POs") == "Pending Endorser"
+    assert extract_status_filter("show all POs") is None
+    assert extract_status_filter("list my purchase orders") is None
 
 
 def test_classify_payment_status() -> None:

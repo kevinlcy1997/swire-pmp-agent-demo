@@ -66,7 +66,7 @@ def test_agent_does_not_leak_restricted_po_to_coco() -> None:
     )
     assert response.status_code == 200
     answer = response.json()["answer"]
-    assert "couldn't find an authorized PO" in answer
+    assert "couldn't find" in answer.lower()
     assert "Restricted Security Works" not in answer
     assert "250,000" not in answer
 

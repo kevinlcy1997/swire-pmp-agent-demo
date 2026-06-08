@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, TypedDict
 
 from backend.agent_api.composer import compose_answer
-from backend.agent_api.intent import classify_intent, extract_po_no
+from backend.agent_api.intent import classify_intent, extract_po_no, extract_status_filter
 from backend.agent_api.pmp_client import PmpClient
 from backend.shared.demo_users import DemoUser
 
@@ -52,9 +52,11 @@ async def select_tools(state: AgentState) -> AgentState:
     elif intent == "pending_approvals":
         plan.append({"name": "pending_approvals", "args": {}})
     elif intent == "pending_pos":
-        plan.append({"name": "po_list", "args": {"status": "Pending Endorser"}})
+        plan.append({"name": "po_list", "args": {"status": "pending"}})
     elif intent == "all_pos":
-        plan.append({"name": "po_list", "args": {}})
+        status_filter = extract_status_filter(message)
+        args: dict[str, Any] = {"status": status_filter} if status_filter else {}
+        plan.append({"name": "po_list", "args": args})
     elif intent == "budget_summary":
         plan.append({"name": "budget_summary", "args": {}})
     elif intent == "po_detail" and po_no:

@@ -13,6 +13,30 @@ def extract_po_no(message: str) -> str | None:
     return match.group(1) if match else None
 
 
+_STATUS_KEYWORDS: list[tuple[str, str]] = [
+    ("approved", "Approved"),
+    ("rejected", "Rejected"),
+    ("cancelled", "Cancelled"),
+    ("pending endorser", "Pending Endorser"),
+    ("pending cost controller", "Pending Cost Controller"),
+    ("pending procurement", "Pending Procurement Review"),
+    ("pending finance", "Pending Finance Review"),
+    ("pending legal", "Pending Legal Review"),
+    ("pending gm", "Pending GM Approval"),
+    ("pending department", "Pending Department Head"),
+    ("pending", "pending"),
+]
+
+
+def extract_status_filter(message: str) -> str | None:
+    """Extract a PO status filter from the user's message, if any."""
+    text = message.lower()
+    for keyword, status in _STATUS_KEYWORDS:
+        if keyword in text:
+            return status
+    return None
+
+
 def _rule_based_intent(message: str) -> str:
     text = message.lower()
     if (
@@ -43,6 +67,7 @@ def _rule_based_intent(message: str) -> str:
     if (
         "longest wait" in text
         or "longest waiting" in text
+        or "longest pending" in text
         or "wait time" in text
         or "waiting longest" in text
         or "oldest pending" in text
